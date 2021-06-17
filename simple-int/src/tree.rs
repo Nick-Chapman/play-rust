@@ -1,19 +1,26 @@
 
 use std::sync::Mutex;
-use std::marker;
 
 pub fn main() {
-    println!("**tree take2**");
-    let res = {
-        let a : Arena = Arena::new();
-        let x = a.alloc(Tree::Leaf(11));
-        let y = a.alloc(Tree::Leaf(22));
-        let z = a.alloc(Tree::Node(x,y));
-        let p = a.alloc(Tree::Node(y,z));
-        let q = a.alloc(Tree::Node(p,p));
-        sum_tree(q)
-    };
+    println!("**fib tree**");
+    let a : Arena<Tree> = Arena::new(Tree::Empty);
+    let tree = make_fib_tree(&a,10);
+    //println!["tree: {:?}", tree];
+    let res = sum_tree(tree);
     println!["res: {}", res];
+}
+
+fn make_fib_tree<'a>(a: &'a Arena<Tree<'a>>, n: u32) -> &'a Tree<'a> {
+    use Tree::*;
+    match n {
+        0 => a.alloc(Leaf(0)),
+        1 => a.alloc(Leaf(1)),
+        n => {
+            let left = make_fib_tree(a,n-2);
+            let right = make_fib_tree(a,n-1);
+            a.alloc(Node(left,right))
+        }
+    }
 }
 
 #[derive(Debug,Copy,Clone)]
@@ -31,40 +38,35 @@ fn sum_tree(tree: &Tree) -> u32 {
     }
 }
 
-#[derive(Debug)]
-struct Arena<'a> {
-    buffer: Mutex<Buffer<'a>>,
-    _marker: marker::PhantomData<&'a Tree<'a>>,
+struct Arena<T> {
+    buffer: Mutex<Buffer<T>>,
 }
 
-impl<'a> Arena<'a> {
-    fn new() -> Arena<'a> {
+impl<T:Copy> Arena<T> {
+    fn new(t0: T) -> Arena<T> {
         Arena {
-            buffer: Mutex::new(Buffer::new()),
-            _marker: marker::PhantomData
+            buffer: Mutex::new(Buffer::new(t0)),
         }
     }
-    fn alloc(&self, thing: Tree<'a>) -> &'a Tree<'a> {
+    fn alloc(&self, thing: T) -> &T {
         let buffer = &mut self.buffer.lock().unwrap();
         let next = buffer.next;
         buffer.next += 1;
         let hold = &mut buffer.array[next];
         *hold = thing;
-        unsafe { & * (hold as *const Tree) }
+        unsafe { & * (hold as *const T) }
     }
 }
 
-const BUFFER_SIZE : usize = 10;
+const BUFFER_SIZE : usize = 200;
 
-#[derive(Debug)]
-struct Buffer<'a> {
+struct Buffer<T> {
     next: usize,
-    array: [Tree<'a>;BUFFER_SIZE],
+    array: [T;BUFFER_SIZE],
 }
 
-impl<'a> Buffer<'a> {
-    fn new() -> Buffer<'a> {
-        let def = Tree::Empty;
-        Buffer { next: 0, array: [def;BUFFER_SIZE] }
+impl<T:Copy> Buffer<T> {
+    fn new(t0: T) -> Buffer<T> {
+        Buffer { next: 0, array: [t0;BUFFER_SIZE] }
     }
 }
