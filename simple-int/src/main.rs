@@ -1,8 +1,10 @@
 
 //mod simple_interpreter;
-mod tree;
+//mod tree;
+mod arena;
 
 fn main() {
-    tree::main();
+    arena::main();
+    //tree::main();
     //simple_interpreter::main();
 }
