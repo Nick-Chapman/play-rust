@@ -1,4 +1,5 @@
 
+mod arena;
 //mod simple_interpreter;
 mod tree;
 mod play_arena;
