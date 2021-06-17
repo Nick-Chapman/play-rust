@@ -1,6 +1,8 @@
 
-mod simple_interpreter;
+//mod simple_interpreter;
+mod tree;
 
 fn main() {
-    simple_interpreter::main();
+    tree::main();
+    //simple_interpreter::main();
 }
