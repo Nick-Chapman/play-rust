@@ -6,7 +6,7 @@ use crate::arena::Arena;
 type Ident = str;
 
 #[derive(Debug,Copy,Clone)]
-enum Exp<'a> {
+pub enum Exp<'a> {
     Var (&'a Ident),
     Lam (&'a Ident, &'a Exp<'a>),
     App (&'a Exp<'a>, &'a Exp<'a>),
@@ -15,43 +15,18 @@ enum Exp<'a> {
 }
 
 #[derive(Debug,Copy,Clone)]
-enum Val<'a> {
+pub enum Val<'a> {
     Num(i32),
     Closure(&'a Env<'a>, &'a Ident, &'a Exp<'a>)
 }
 
 #[derive(Debug,Copy,Clone)]
-enum Env<'a> {
+pub enum Env<'a> {
     Nil,
     Cons (&'a Ident, &'a Val<'a>, &'a Env<'a>)
 }
 
-pub fn main() {
-    println!["**lam**"];
-    //arenas for expressions, values, environments
-    let ae = Arena::new(Exp::Num(0));
-    let av = Arena::new(Val::Num(0));
-    let aq = Arena::new(Env::Nil);
-    let f = "f";
-    let x = "x";
-    use Exp::*;
-    let decrement = ae.alloc(Lam(x, ae.alloc(Sub(ae.alloc(Exp::Var(x)),
-                                                 ae.alloc(Num(1))))));
-    let ff = ae.alloc(Exp::Var(f));
-    let xx = ae.alloc(Exp::Var(x));
-    let thrice = ae.alloc(Lam(f,ae.alloc(Lam(x, ae.alloc(App(ff,ae.alloc(App(ff,ae.alloc(App(ff,xx))))))))));
-    let exp = ae.alloc(App(ae.alloc(App(ae.alloc(App(thrice,thrice)),decrement)),
-                           ae.alloc(Num(0))));
-
-    let env = aq.alloc(Env::Nil);
-    // My Favorite example: "thrice thrice decrement 0" --> -27
-    println!["exp = {:?}", exp];
-    println!["env = {:?}", env];
-    let res = eval(&aq,&av,env,exp);
-    println!["res = {:?}", res];
-}
-
-fn eval<'a>(aq: &'a Arena<Env<'a>>, av: &'a Arena<Val<'a>>, env: &'a Env<'a>, exp: &'a Exp<'a>) -> &'a Val<'a> {
+pub fn eval<'a>(aq: &'a Arena<Env<'a>>, av: &'a Arena<Val<'a>>, env: &'a Env<'a>, exp: &'a Exp<'a>) -> &'a Val<'a> {
     let v = {
         match exp {
             Exp::Var(x) => env.lookup(x),
@@ -66,7 +41,7 @@ fn eval<'a>(aq: &'a Arena<Env<'a>>, av: &'a Arena<Val<'a>>, env: &'a Env<'a>, ex
 
 fn apply<'a>(aq: &'a Arena<Env<'a>>, av: &'a Arena<Val<'a>>, v1: &'a Val<'a>, v2: &'a Val<'a>) -> &'a Val<'a> {
     match v1 {
-        Val::Num(_) => panic!["apply Number"],
+        Val::Num(_) => panic!["apply number"],
         Val::Closure(env,x,body) => eval(aq,av,env.bind(aq,x,v2),body)
     }
 }

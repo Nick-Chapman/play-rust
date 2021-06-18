@@ -17,10 +17,11 @@ impl<T:Copy> Arena<T> {
         buffer.next += 1;
         let hold = &mut buffer.array[next];
         *hold = thing;
-        unsafe { & * (hold as *const T) }
+        unsafe { & * (hold as *const T) } // my first unsafe :)
     }
 }
 
+//TODO: avoid fixed max size by reimplementing with a Vec instead of an array.
 const BUFFER_SIZE : usize = 200;
 
 struct Buffer<T> {
